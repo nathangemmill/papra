@@ -90,6 +90,11 @@ const OrganizationLayoutSideNav: Component = () => {
       href: `/organizations/${params.organizationId}/tags`,
     },
     {
+      label: 'Custom Properties',
+      icon: 'i-tabler-forms',
+      href: `/organizations/${params.organizationId}/custom-properties`,
+    },
+    {
       label: t('layout.menu.tagging-rules'),
       icon: 'i-tabler-list-check',
       href: `/organizations/${params.organizationId}/tagging-rules`,

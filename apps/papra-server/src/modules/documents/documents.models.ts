@@ -2,6 +2,7 @@ import type { PartialBy } from '@corentinth/chisels';
 import type { DbSelectableDocument } from './documents.types';
 import filenamify from 'filenamify';
 import { omit } from 'lodash-es';
+import { aggregateDocumentCustomPropertyValues } from '../custom-properties/custom-properties.models';
 import { getExtension } from '../shared/files/file-names';
 import { generateId } from '../shared/random/ids';
 import { isDefined } from '../shared/utils';
@@ -30,15 +31,24 @@ export function isDocumentSizeLimitEnabled({ maxUploadSize }: { maxUploadSize: n
 }
 
 export function formatDocumentForApi<T extends PartialBy<DbSelectableDocument, 'content'>>({ document }: { document: T }) {
+  const formatted = omit(
+    document,
+    [
+      'fileEncryptionAlgorithm',
+      'fileEncryptionKeyWrapped',
+      'fileEncryptionKekVersion',
+      'originalStorageKey',
+      'customPropertyValues',
+    ],
+  );
+
+  const customPropertyValues = (document as T & { customPropertyValues?: unknown[] }).customPropertyValues;
+
   return {
-    ...omit(
-      document,
-      [
-        'fileEncryptionAlgorithm',
-        'fileEncryptionKeyWrapped',
-        'fileEncryptionKekVersion',
-        'originalStorageKey',
-      ],
+    ...formatted,
+    ...(customPropertyValues
+      ? { customProperties: aggregateDocumentCustomPropertyValues({ rawValues: customPropertyValues as Parameters<typeof aggregateDocumentCustomPropertyValues>[0]['rawValues'] }) }
+      : {}
     ),
   };
 }

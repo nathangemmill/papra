@@ -141,18 +141,24 @@ async function getDocumentById({ documentId, organizationId, db }: { documentId:
     return { document: undefined };
   }
 
-  const tags = await db
-    .select({
-      ...getTableColumns(tagsTable),
-    })
-    .from(documentsTagsTable)
-    .leftJoin(tagsTable, eq(tagsTable.id, documentsTagsTable.tagId))
-    .where(eq(documentsTagsTable.documentId, documentId));
+  const [
+    tags,
+    // customPropertyValues,
+  ] = await Promise.all([
+    db
+      .select({
+        ...getTableColumns(tagsTable),
+      })
+      .from(documentsTagsTable)
+      .leftJoin(tagsTable, eq(tagsTable.id, documentsTagsTable.tagId))
+      .where(eq(documentsTagsTable.documentId, documentId)),
+  ]);
 
   return {
     document: {
       ...document,
       tags,
+      // customPropertyValues,
     },
   };
 }
