@@ -85,3 +85,36 @@ export async function deleteCustomPropertyDefinition({
     method: 'DELETE',
   });
 }
+
+export async function setDocumentCustomPropertyValue({
+  organizationId,
+  documentId,
+  propertyDefinitionId,
+  value,
+}: {
+  organizationId: string;
+  documentId: string;
+  propertyDefinitionId: string;
+  value: string | number | boolean | string[];
+}) {
+  await apiClient({
+    path: `/api/organizations/${organizationId}/documents/${documentId}/custom-properties/${propertyDefinitionId}`,
+    method: 'PUT',
+    body: { value },
+  });
+}
+
+export async function deleteDocumentCustomPropertyValue({
+  organizationId,
+  documentId,
+  propertyDefinitionId,
+}: {
+  organizationId: string;
+  documentId: string;
+  propertyDefinitionId: string;
+}) {
+  await apiClient({
+    path: `/api/organizations/${organizationId}/documents/${documentId}/custom-properties/${propertyDefinitionId}`,
+    method: 'DELETE',
+  });
+}

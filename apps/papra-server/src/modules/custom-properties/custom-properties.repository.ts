@@ -24,6 +24,7 @@ export function createCustomPropertiesRepository({ db }: { db: Database }) {
       syncSelectOptions,
 
       getDocumentCustomPropertyValues,
+      getCustomPropertyValuesByDocumentIds,
       setDocumentCustomPropertyValue,
       deleteDocumentCustomPropertyValue,
     },
@@ -290,6 +291,7 @@ async function getDocumentCustomPropertyValues({ documentId, db }: { documentId:
       definition: {
         id: customPropertyDefinitionsTable.id,
         name: customPropertyDefinitionsTable.name,
+        key: customPropertyDefinitionsTable.key,
         type: customPropertyDefinitionsTable.type,
       },
       option: {
@@ -303,6 +305,48 @@ async function getDocumentCustomPropertyValues({ documentId, db }: { documentId:
     .where(eq(documentCustomPropertyValuesTable.documentId, documentId));
 
   return { values };
+}
+
+async function getCustomPropertyValuesByDocumentIds({ documentIds, db }: { documentIds: string[]; db: Database }) {
+  if (documentIds.length === 0) {
+    return { valuesByDocumentId: {} as Record<string, { value: { id: string; propertyDefinitionId: string; textValue: string | null; numberValue: number | null; dateValue: Date | null; booleanValue: boolean | null; selectOptionId: string | null }; definition: { id: string; name: string; key: string; type: string }; option: { id: string | null; name: string | null } | null }[]> };
+  }
+
+  const rows = await db
+    .select({
+      documentId: documentCustomPropertyValuesTable.documentId,
+      value: {
+        id: documentCustomPropertyValuesTable.id,
+        propertyDefinitionId: documentCustomPropertyValuesTable.propertyDefinitionId,
+        textValue: documentCustomPropertyValuesTable.textValue,
+        numberValue: documentCustomPropertyValuesTable.numberValue,
+        dateValue: documentCustomPropertyValuesTable.dateValue,
+        booleanValue: documentCustomPropertyValuesTable.booleanValue,
+        selectOptionId: documentCustomPropertyValuesTable.selectOptionId,
+      },
+      definition: {
+        id: customPropertyDefinitionsTable.id,
+        name: customPropertyDefinitionsTable.name,
+        key: customPropertyDefinitionsTable.key,
+        type: customPropertyDefinitionsTable.type,
+      },
+      option: {
+        id: customPropertySelectOptionsTable.id,
+        name: customPropertySelectOptionsTable.name,
+      },
+    })
+    .from(documentCustomPropertyValuesTable)
+    .innerJoin(customPropertyDefinitionsTable, eq(documentCustomPropertyValuesTable.propertyDefinitionId, customPropertyDefinitionsTable.id))
+    .leftJoin(customPropertySelectOptionsTable, eq(documentCustomPropertyValuesTable.selectOptionId, customPropertySelectOptionsTable.id))
+    .where(inArray(documentCustomPropertyValuesTable.documentId, documentIds));
+
+  const valuesByDocumentId: Record<string, { value: typeof rows[0]['value']; definition: typeof rows[0]['definition']; option: typeof rows[0]['option'] }[]> = {};
+
+  for (const { documentId, ...rest } of rows) {
+    (valuesByDocumentId[documentId] ??= []).push(rest);
+  }
+
+  return { valuesByDocumentId };
 }
 
 async function setDocumentCustomPropertyValue({ documentId, propertyDefinitionId, values, db }: {

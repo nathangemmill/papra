@@ -3,6 +3,8 @@ import { Readable } from 'node:stream';
 import { z } from 'zod';
 import { requireAuthentication } from '../app/auth/auth.middleware';
 import { getUser } from '../app/auth/auth.models';
+import { buildCustomPropertiesRecord } from '../custom-properties/custom-properties.models';
+import { createCustomPropertiesRepository } from '../custom-properties/custom-properties.repository';
 import { organizationIdSchema } from '../organizations/organization.schemas';
 import { createOrganizationsRepository } from '../organizations/organizations.repository';
 import { ensureUserIsInOrganization } from '../organizations/organizations.usecases';
@@ -125,13 +127,21 @@ function setupGetDocumentRoute({ app, db }: RouteDefinitionContext) {
 
       const documentsRepository = createDocumentsRepository({ db });
       const organizationsRepository = createOrganizationsRepository({ db });
+      const customPropertiesRepository = createCustomPropertiesRepository({ db });
 
       await ensureUserIsInOrganization({ userId, organizationId, organizationsRepository });
 
-      const { document } = await getDocumentOrThrow({ documentId, organizationId, documentsRepository });
+      const [{ document }, { values: customPropertyValues }, { propertyDefinitions }] = await Promise.all([
+        getDocumentOrThrow({ documentId, organizationId, documentsRepository }),
+        customPropertiesRepository.getDocumentCustomPropertyValues({ documentId }),
+        customPropertiesRepository.getOrganizationPropertyDefinitions({ organizationId }),
+      ]);
 
       return context.json({
-        document: formatDocumentForApi({ document }),
+        document: {
+          ...formatDocumentForApi({ document }),
+          customProperties: buildCustomPropertiesRecord({ rawValues: customPropertyValues, propertyDefinitions }),
+        },
       });
     },
   );
@@ -273,19 +283,24 @@ function setupGetDocumentsRoute({ app, db, documentSearchServices }: RouteDefini
       const { searchQuery, pageIndex, pageSize } = context.req.valid('query');
 
       const organizationsRepository = createOrganizationsRepository({ db });
+      const customPropertiesRepository = createCustomPropertiesRepository({ db });
 
       await ensureUserIsInOrganization({ userId, organizationId, organizationsRepository });
 
-      const { documents, documentsCount } = await searchOrganizationDocuments({
-        organizationId,
-        searchQuery,
-        pageIndex,
-        pageSize,
-        documentSearchServices,
+      const [{ documents, documentsCount }, { propertyDefinitions }] = await Promise.all([
+        searchOrganizationDocuments({ organizationId, searchQuery, pageIndex, pageSize, documentSearchServices }),
+        customPropertiesRepository.getOrganizationPropertyDefinitions({ organizationId }),
+      ]);
+
+      const { valuesByDocumentId } = await customPropertiesRepository.getCustomPropertyValuesByDocumentIds({
+        documentIds: documents.map(d => d.id),
       });
 
       return context.json({
-        documents: formatDocumentsForApi({ documents }),
+        documents: documents.map(doc => ({
+          ...formatDocumentForApi({ document: doc }),
+          customProperties: buildCustomPropertiesRecord({ rawValues: valuesByDocumentId[doc.id] ?? [], propertyDefinitions }),
+        })),
         documentsCount,
       });
     },

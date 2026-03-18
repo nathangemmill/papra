@@ -16,6 +16,7 @@ export type Document = {
   deletedBy?: string;
   content: string;
   tags: Tag[];
+  customProperties?: Record<string, unknown>;
 };
 
 export type DocumentActivityEvent = (typeof DOCUMENT_ACTIVITY_EVENTS)[keyof typeof DOCUMENT_ACTIVITY_EVENTS];

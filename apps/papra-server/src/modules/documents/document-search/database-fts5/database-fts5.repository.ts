@@ -11,28 +11,6 @@ import { documentsTable } from '../../documents.table';
 import { makeSearchWhereClause } from './database-fts5.repository.models';
 import { documentsFtsTable } from './database-fts5.tables';
 
-type CustomPropertyRow = {
-  value: {
-    id: string;
-    documentId: string;
-    propertyDefinitionId: string;
-    textValue: string | null;
-    numberValue: number | null;
-    dateValue: Date | null;
-    booleanValue: boolean | null;
-    selectOptionId: string | null;
-  };
-  definition: {
-    id: string;
-    name: string;
-    type: string;
-  };
-  option: {
-    id: string | null;
-    value: string | null;
-  } | null;
-};
-
 export type DocumentSearchRepository = ReturnType<typeof createDocumentSearchRepository>;
 
 export function createDocumentSearchRepository({ db }: { db: Database }) {
@@ -84,7 +62,7 @@ async function searchOrganizationDocuments({ organizationId, searchQuery, pageIn
   const documentsMap = documentsWithTags.reduce(
     (acc, { document, tag }) => {
       if (!acc[document.id]) {
-        acc[document.id] = { ...document, tags: [], customPropertyValues: [] as CustomPropertyRow[] };
+        acc[document.id] = { ...document, tags: [] };
       }
 
       if (tag) {
@@ -93,7 +71,7 @@ async function searchOrganizationDocuments({ organizationId, searchQuery, pageIn
 
       return acc;
     },
-    {} as Record<string, Omit<Document, 'content'> & { tags: Tag[]; customPropertyValues: CustomPropertyRow[] }>,
+    {} as Record<string, Omit<Document, 'content'> & { tags: Tag[] }>,
   );
 
   const documents = Object.values(documentsMap);

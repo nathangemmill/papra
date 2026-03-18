@@ -6,6 +6,8 @@ import { A, useNavigate, useParams, useSearchParams } from '@solidjs/router';
 import { useInfiniteQuery, useQuery } from '@tanstack/solid-query';
 import { createEffect, createSignal, For, Match, Show, Suspense, Switch } from 'solid-js';
 import { useConfig } from '@/modules/config/config.provider';
+import { DocumentCustomPropertiesPanel } from '@/modules/custom-properties/components/document-custom-properties-panel.component';
+import { fetchCustomPropertyDefinitions } from '@/modules/custom-properties/custom-properties.services';
 import { RelativeTime } from '@/modules/i18n/components/RelativeTime';
 import { useI18n } from '@/modules/i18n/i18n.provider';
 import { downloadFile } from '@/modules/shared/files/download';
@@ -33,21 +35,19 @@ type KeyValueItem = {
 
 const KeyValues: Component<{ data?: KeyValueItem[] }> = (props) => {
   return (
-    <div class="flex flex-col gap-2">
-      <table>
-        <For each={props.data}>
-          {item => (
-            <tr>
-              <td class="py-1 pr-2 text-sm text-muted-foreground flex items-center gap-2 whitespace-nowrap">
-                {item.icon && <div class={item.icon} />}
-                {item.label}
-              </td>
-              <td class="py-1 pl-2 text-sm">{item.value}</td>
-            </tr>
-          )}
-        </For>
-      </table>
-    </div>
+    <table class="w-full border-collapse">
+      <For each={props.data}>
+        {item => (
+          <tr>
+            <td class="py-1 pr-2 text-sm text-muted-foreground flex items-center gap-2 whitespace-nowrap">
+              {item.icon && <div class={item.icon} />}
+              {item.label}
+            </td>
+            <td class="py-1 pl-2 text-sm">{item.value}</td>
+          </tr>
+        )}
+      </For>
+    </table>
   );
 };
 
@@ -156,6 +156,11 @@ export const DocumentPage: Component = () => {
   const documentFileQuery = useQuery(() => ({
     queryKey: ['organizations', params.organizationId, 'documents', params.documentId, 'file'],
     queryFn: () => fetchDocumentFile({ documentId: params.documentId, organizationId: params.organizationId }),
+  }));
+
+  const customPropertyDefinitionsQuery = useQuery(() => ({
+    queryKey: ['organizations', params.organizationId, 'custom-properties'],
+    queryFn: () => fetchCustomPropertyDefinitions({ organizationId: params.organizationId }),
   }));
 
   const activityPageSize = 20;
@@ -343,6 +348,16 @@ export const DocumentPage: Component = () => {
                         },
                       ]}
                       />
+
+                      <Show when={customPropertyDefinitionsQuery.data?.propertyDefinitions}>
+                        {getDefinitions => (
+                          <DocumentCustomPropertiesPanel
+                            document={getDocument()}
+                            organizationId={params.organizationId}
+                            propertyDefinitions={getDefinitions()}
+                          />
+                        )}
+                      </Show>
                     </TabsContent>
 
                     <TabsContent value="content">

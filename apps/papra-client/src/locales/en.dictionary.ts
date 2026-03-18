@@ -356,6 +356,12 @@ export const translations = {
   'documents.info.no-date': 'No date',
   'documents.info.today': 'Today',
 
+  'documents.custom-properties.section-title': 'Properties',
+  'documents.custom-properties.no-value': 'Not set',
+  'documents.custom-properties.text-placeholder': 'Enter a value...',
+  'documents.custom-properties.save': 'Save',
+  'documents.custom-properties.clear': 'Clear',
+
   'documents.rename.title': 'Rename document',
   'documents.rename.form.name.label': 'Name',
   'documents.rename.form.name.placeholder': 'Example: Invoice 2024',

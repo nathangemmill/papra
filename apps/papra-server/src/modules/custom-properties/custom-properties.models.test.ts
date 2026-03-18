@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { CUSTOM_PROPERTY_TYPES } from './custom-properties.constants';
-import { aggregateDocumentCustomPropertyValues, validateAndExtractPropertyValue } from './custom-properties.models';
+import { aggregateDocumentCustomPropertyValues, buildCustomPropertiesRecord, validateAndExtractPropertyValue } from './custom-properties.models';
 
 describe('custom-properties models', () => {
   describe('validateAndExtractPropertyValue', () => {
@@ -163,20 +163,20 @@ describe('custom-properties models', () => {
         rawValues: [
           {
             value: { id: 'v1', propertyDefinitionId: 'cpd_a', textValue: 'hello', numberValue: null, dateValue: null, booleanValue: null, selectOptionId: null },
-            definition: { id: 'cpd_a', name: 'Name', type: 'text' },
+            definition: { id: 'cpd_a', name: 'Name', key: 'name', type: 'text' },
             option: null,
           },
           {
             value: { id: 'v2', propertyDefinitionId: 'cpd_b', textValue: null, numberValue: 42, dateValue: null, booleanValue: null, selectOptionId: null },
-            definition: { id: 'cpd_b', name: 'Amount', type: 'number' },
+            definition: { id: 'cpd_b', name: 'Amount', key: 'amount', type: 'number' },
             option: null,
           },
         ],
       });
 
       expect(result).to.eql([
-        { propertyDefinitionId: 'cpd_a', name: 'Name', type: 'text', value: 'hello' },
-        { propertyDefinitionId: 'cpd_b', name: 'Amount', type: 'number', value: 42 },
+        { propertyDefinitionId: 'cpd_a', key: 'name', name: 'Name', type: 'text', value: 'hello' },
+        { propertyDefinitionId: 'cpd_b', key: 'amount', name: 'Amount', type: 'number', value: 42 },
       ]);
     });
 
@@ -185,14 +185,14 @@ describe('custom-properties models', () => {
         rawValues: [
           {
             value: { id: 'v1', propertyDefinitionId: 'cpd_a', textValue: null, numberValue: null, dateValue: null, booleanValue: null, selectOptionId: 'cpso_x' },
-            definition: { id: 'cpd_a', name: 'Category', type: 'select' },
+            definition: { id: 'cpd_a', name: 'Category', key: 'category', type: 'select' },
             option: { id: 'cpso_x', name: 'Finance' },
           },
         ],
       });
 
       expect(result).to.eql([
-        { propertyDefinitionId: 'cpd_a', name: 'Category', type: 'select', value: { optionId: 'cpso_x', name: 'Finance' } },
+        { propertyDefinitionId: 'cpd_a', key: 'category', name: 'Category', type: 'select', value: { optionId: 'cpso_x', name: 'Finance' } },
       ]);
     });
 
@@ -201,12 +201,12 @@ describe('custom-properties models', () => {
         rawValues: [
           {
             value: { id: 'v1', propertyDefinitionId: 'cpd_a', textValue: null, numberValue: null, dateValue: null, booleanValue: null, selectOptionId: 'cpso_1' },
-            definition: { id: 'cpd_a', name: 'Labels', type: 'multi_select' },
+            definition: { id: 'cpd_a', name: 'Labels', key: 'labels', type: 'multi_select' },
             option: { id: 'cpso_1', name: 'Urgent' },
           },
           {
             value: { id: 'v2', propertyDefinitionId: 'cpd_a', textValue: null, numberValue: null, dateValue: null, booleanValue: null, selectOptionId: 'cpso_2' },
-            definition: { id: 'cpd_a', name: 'Labels', type: 'multi_select' },
+            definition: { id: 'cpd_a', name: 'Labels', key: 'labels', type: 'multi_select' },
             option: { id: 'cpso_2', name: 'Review' },
           },
         ],
@@ -215,6 +215,7 @@ describe('custom-properties models', () => {
       expect(result).to.eql([
         {
           propertyDefinitionId: 'cpd_a',
+          key: 'labels',
           name: 'Labels',
           type: 'multi_select',
           value: [
@@ -227,6 +228,54 @@ describe('custom-properties models', () => {
 
     test('returns an empty array for no values', () => {
       expect(aggregateDocumentCustomPropertyValues({ rawValues: [] })).to.eql([]);
+    });
+  });
+
+  describe('buildCustomPropertiesRecord', () => {
+    test('returns a record keyed by property key with values', () => {
+      const result = buildCustomPropertiesRecord({
+        propertyDefinitions: [{ key: 'name' }, { key: 'amount' }],
+        rawValues: [
+          {
+            value: { id: 'v1', propertyDefinitionId: 'cpd_a', textValue: 'hello', numberValue: null, dateValue: null, booleanValue: null, selectOptionId: null },
+            definition: { id: 'cpd_a', name: 'Name', key: 'name', type: 'text' },
+            option: null,
+          },
+          {
+            value: { id: 'v2', propertyDefinitionId: 'cpd_b', textValue: null, numberValue: 42, dateValue: null, booleanValue: null, selectOptionId: null },
+            definition: { id: 'cpd_b', name: 'Amount', key: 'amount', type: 'number' },
+            option: null,
+          },
+        ],
+      });
+
+      expect(result).to.eql({ name: 'hello', amount: 42 });
+    });
+
+    test('includes null for definitions with no value set', () => {
+      const result = buildCustomPropertiesRecord({
+        propertyDefinitions: [{ key: 'name' }, { key: 'amount' }, { key: 'status' }],
+        rawValues: [
+          {
+            value: { id: 'v1', propertyDefinitionId: 'cpd_a', textValue: 'hello', numberValue: null, dateValue: null, booleanValue: null, selectOptionId: null },
+            definition: { id: 'cpd_a', name: 'Name', key: 'name', type: 'text' },
+            option: null,
+          },
+        ],
+      });
+
+      expect(result).to.eql({ name: 'hello', amount: null, status: null });
+    });
+
+    test('returns a record with all nulls when no values are set', () => {
+      expect(buildCustomPropertiesRecord({
+        propertyDefinitions: [{ key: 'name' }, { key: 'amount' }],
+        rawValues: [],
+      })).to.eql({ name: null, amount: null });
+    });
+
+    test('returns an empty record when there are no definitions', () => {
+      expect(buildCustomPropertiesRecord({ propertyDefinitions: [], rawValues: [] })).to.eql({});
     });
   });
 });

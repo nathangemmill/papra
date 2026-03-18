@@ -73,30 +73,32 @@ export function validateAndExtractPropertyValue({ type, value }: { type: CustomP
   }
 }
 
-export function aggregateDocumentCustomPropertyValues({ rawValues }: {
-  rawValues: {
-    value: {
-      id: string;
-      propertyDefinitionId: string;
-      textValue: string | null;
-      numberValue: number | null;
-      dateValue: Date | null;
-      booleanValue: boolean | null;
-      selectOptionId: string | null;
-    };
-    definition: {
-      id: string;
-      name: string;
-      type: string;
-    };
-    option: {
-      id: string | null;
-      name: string | null;
-    } | null;
-  }[];
-}) {
+type RawCustomPropertyValueRow = {
+  value: {
+    id: string;
+    propertyDefinitionId: string;
+    textValue: string | null;
+    numberValue: number | null;
+    dateValue: Date | null;
+    booleanValue: boolean | null;
+    selectOptionId: string | null;
+  };
+  definition: {
+    id: string;
+    name: string;
+    key: string;
+    type: string;
+  };
+  option: {
+    id: string | null;
+    name: string | null;
+  } | null;
+};
+
+export function aggregateDocumentCustomPropertyValues({ rawValues }: { rawValues: RawCustomPropertyValueRow[] }) {
   const grouped = new Map<string, {
     propertyDefinitionId: string;
+    key: string;
     name: string;
     type: string;
     value: unknown;
@@ -110,6 +112,7 @@ export function aggregateDocumentCustomPropertyValues({ rawValues }: {
       if (!existing) {
         grouped.set(definition.id, {
           propertyDefinitionId: definition.id,
+          key: definition.key,
           name: definition.name,
           type: definition.type,
           value: (option !== null && option !== undefined && option.id !== null && option.id !== undefined)
@@ -122,6 +125,7 @@ export function aggregateDocumentCustomPropertyValues({ rawValues }: {
     } else if (!existing) {
       grouped.set(definition.id, {
         propertyDefinitionId: definition.id,
+        key: definition.key,
         name: definition.name,
         type: definition.type,
         value: resolveScalarValue({ row }),
@@ -130,6 +134,12 @@ export function aggregateDocumentCustomPropertyValues({ rawValues }: {
   }
 
   return [...grouped.values()];
+}
+
+export function buildCustomPropertiesRecord({ rawValues, propertyDefinitions }: { rawValues: RawCustomPropertyValueRow[]; propertyDefinitions: { key: string }[] }): Record<string, unknown> {
+  const aggregated = aggregateDocumentCustomPropertyValues({ rawValues });
+  const valuesByKey = Object.fromEntries(aggregated.map(({ key, value }) => [key, value]));
+  return Object.fromEntries(propertyDefinitions.map(def => [def.key, valuesByKey[def.key] ?? null]));
 }
 
 function resolveScalarValue({ row }: {
