@@ -332,9 +332,70 @@ export const DocumentPage: Component = () => {
                           },
                           {
                             label: t('documents.info.notes'),
-                            value: getDocument().notes ?? '',
+                            value: (
+                              <NotesEditButton
+                                notes={getDocument().notes ?? ''}
+                                documentId={getDocument().id}
+                                organizationId={params.organizationId}
+                              />
+                            ),
                             icon: 'i-tabler-notes',
                           },
+                          // Editable notes button component
+                          import { createSignal } from 'solid-js';
+                          import { useMutation, useQueryClient } from '@tanstack/solid-query';
+                          import { Button } from '@/modules/ui/components/button';
+                          import { TextArea } from '@/modules/ui/components/textarea';
+                          import { createToast } from '@/modules/ui/components/sonner';
+                          import { updateDocument } from '../components/documents.services';
+
+                          const NotesEditButton = (props: { notes: string; documentId: string; organizationId: string }) => {
+                            const [isEditing, setIsEditing] = createSignal(false);
+                            const [notes, setNotes] = createSignal(props.notes);
+                            const queryClient = useQueryClient();
+                            const mutation = useMutation(() => ({
+                              mutationFn: (newNotes: string) => updateDocument({
+                                documentId: props.documentId,
+                                organizationId: props.organizationId,
+                                notes: newNotes,
+                              }),
+                              onSuccess: () => {
+                                createToast({ type: 'success', message: 'Notes updated' });
+                                setIsEditing(false);
+                                queryClient.invalidateQueries({
+                                  queryKey: ['organizations', props.organizationId, 'documents', props.documentId],
+                                });
+                              },
+                              onError: () => {
+                                createToast({ type: 'error', message: 'Failed to update notes' });
+                              },
+                            }));
+
+                            return isEditing() ? (
+                              <div class="flex items-center gap-2">
+                                <TextArea
+                                  value={notes()}
+                                  onInput={e => setNotes(e.currentTarget.value)}
+                                  class="min-w-32 min-h-16"
+                                />
+                                <Button size="sm" variant="outline" onClick={() => mutation.mutate(notes())}>
+                                  Save
+                                </Button>
+                                <Button size="sm" variant="ghost" onClick={() => { setIsEditing(false); setNotes(props.notes); }}>
+                                  Cancel
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                class="flex items-center gap-2 group bg-transparent! p-0 h-auto text-left"
+                                onClick={() => setIsEditing(true)}
+                              >
+                                {props.notes || <span class="text-muted-foreground">Add notes</span>}
+                                <div class="i-tabler-pencil size-4 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
+                              </Button>
+                            );
+                          };
                           {
                             label: t('documents.info.created-at'),
                             value: formatRelativeTime(getDocument().createdAt),
