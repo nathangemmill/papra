@@ -347,7 +347,7 @@ export const DocumentPage: Component = () => {
                           import { Button } from '@/modules/ui/components/button';
                           import { TextArea } from '@/modules/ui/components/textarea';
                           import { createToast } from '@/modules/ui/components/sonner';
-                          import { updateDocument } from '../components/documents.services';
+                          import { updateDocument } from '../documents.services';
 
                           const NotesEditButton = (props: { notes: string; documentId: string; organizationId: string }) => {
                             const [isEditing, setIsEditing] = createSignal(false);
