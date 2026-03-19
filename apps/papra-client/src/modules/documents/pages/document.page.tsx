@@ -291,58 +291,62 @@ export const DocumentPage: Component = () => {
                     </TabsList>
 
                     <TabsContent value="info">
-                      <KeyValues data={[
-                        {
-                          label: t('documents.info.id'),
-                          value: getDocument().id,
-                          icon: 'i-tabler-id',
-                        },
-                        {
-                          label: t('documents.info.name'),
-                          value: (
-                            <Button
-                              variant="ghost"
-                              class="flex items-center gap-2 group bg-transparent! p-0 h-auto text-left"
-                              onClick={() => openRenameDialog({
-                                documentId: getDocument().id,
-                                organizationId: params.organizationId,
-                                documentName: getDocument().name,
-                              })}
-                            >
-                              {getDocument().name}
-
-                              <div class="i-tabler-pencil size-4 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
-                            </Button>
-                          ),
-                          icon: 'i-tabler-file-text',
-                        },
-                        {
-                          label: t('documents.info.type'),
-                          value: getDocument().mimeType,
-                          icon: 'i-tabler-file-unknown',
-                        },
-                        {
-                          label: t('documents.info.size'),
-                          value: formatBytes({ bytes: getDocument().originalSize, base: 1000 }),
-                          icon: 'i-tabler-weight',
-                        },
-                        {
-                          label: t('documents.info.document-date'),
-                          value: <DocumentDatePicker document={getDocument()} organizationId={params.organizationId} />,
-                          icon: 'i-tabler-calendar-event',
-                        },
-                        {
-                          label: t('documents.info.created-at'),
-                          value: formatRelativeTime(getDocument().createdAt),
-                          icon: 'i-tabler-calendar',
-                        },
-                        {
-                          label: t('documents.info.updated-at'),
-                          value: getDocument().updatedAt ? formatRelativeTime(getDocument().updatedAt!) : <span class="text-muted-foreground">{t('documents.info.never')}</span>,
-                          icon: 'i-tabler-calendar',
-                        },
-                      ]}
-                      />
+                        <KeyValues data={[
+                          {
+                            label: t('documents.info.id'),
+                            value: getDocument().id,
+                            icon: 'i-tabler-id',
+                          },
+                          {
+                            label: t('documents.info.name'),
+                            value: (
+                              <Button
+                                variant="ghost"
+                                class="flex items-center gap-2 group bg-transparent! p-0 h-auto text-left"
+                                onClick={() => openRenameDialog({
+                                  documentId: getDocument().id,
+                                  organizationId: params.organizationId,
+                                  documentName: getDocument().name,
+                                })}
+                              >
+                                {getDocument().name}
+                                <div class="i-tabler-pencil size-4 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
+                              </Button>
+                            ),
+                            icon: 'i-tabler-file-text',
+                          },
+                          {
+                            label: t('documents.info.type'),
+                            value: getDocument().mimeType,
+                            icon: 'i-tabler-file-unknown',
+                          },
+                          {
+                            label: t('documents.info.size'),
+                            value: formatBytes({ bytes: getDocument().originalSize, base: 1000 }),
+                            icon: 'i-tabler-weight',
+                          },
+                          {
+                            label: t('documents.info.document-date'),
+                            value: <DocumentDatePicker document={getDocument()} organizationId={params.organizationId} />,
+                            icon: 'i-tabler-calendar-event',
+                          },
+                          {
+                            label: t('documents.info.notes'),
+                            value: getDocument().notes ?? '',
+                            icon: 'i-tabler-notes',
+                          },
+                          {
+                            label: t('documents.info.created-at'),
+                            value: formatRelativeTime(getDocument().createdAt),
+                            icon: 'i-tabler-calendar',
+                          },
+                          {
+                            label: t('documents.info.updated-at'),
+                            value: getDocument().updatedAt ? formatRelativeTime(getDocument().updatedAt!) : <span class="text-muted-foreground">{t('documents.info.never')}</span>,
+                            icon: 'i-tabler-calendar',
+                          },
+                        ]}
+                        />
                     </TabsContent>
 
                     <TabsContent value="content">
