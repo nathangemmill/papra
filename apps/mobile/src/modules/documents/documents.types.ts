@@ -12,4 +12,5 @@ export type Document = {
     name: string;
     color: string;
   }[];
+  notes?: string;
 };

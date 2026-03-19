@@ -14,6 +14,7 @@ export type PapraDocument = {
   deletedAt: Date | null;
   isDeleted: boolean;
   content: string;
+  notes?: string;
 };
 
 export type PapraTag = {
