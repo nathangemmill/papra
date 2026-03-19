@@ -45,18 +45,18 @@ function cleanDemoAssetsPlugin(): Plugin {
       if (!isDemoMode) {
         const startedAt = Date.now();
         const distDir = path.resolve(__dirname, 'dist/assets');
-        const files = fs.readdirSync(distDir);
-
-        const demoPdfPattern = /\d{3}\.demo-document\.file-.+$/;
-
-        files.forEach((file) => {
-          if (demoPdfPattern.test(file)) {
-            const filePath = path.join(distDir, file);
-            fs.unlinkSync(filePath);
-          }
-        });
-        const duration = Date.now() - startedAt;
-        console.log(`[clean-demo-assets] Removed demo documents from build output in ${duration}ms`);
+        if (fs.existsSync(distDir)) {
+          const files = fs.readdirSync(distDir);
+          const demoPdfPattern = /\d{3}\.demo-document\.file-.+$/;
+          files.forEach((file) => {
+            if (demoPdfPattern.test(file)) {
+              const filePath = path.join(distDir, file);
+              fs.unlinkSync(filePath);
+            }
+          });
+          const duration = Date.now() - startedAt;
+          console.log(`[clean-demo-assets] Removed demo documents from build output in ${duration}ms`);
+        }
       }
     },
   };
