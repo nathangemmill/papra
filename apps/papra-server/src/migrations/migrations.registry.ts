@@ -18,6 +18,8 @@ import { indexDocumentsFtsIdsMigration } from './list/0015-index-documents-fts-i
 import { caseInsensitiveTagNameUniqConstraintMigration } from './list/0016-case-insensitive-tag-name-uniq-constraint.migration';
 import { documentsDateMigration } from './list/0017-documents-date.migration';
 import { customPropertiesMigration } from './list/0018-custom-properties.migration';
+import { documentsNotesMigration } from './list/0019-documents-notes.migration';
+import { documentsNotesNullableMigration } from './list/0020-documents-notes-nullable.migration';
 
 export const migrations: Migration[] = [
   initialSchemaSetupMigration,
@@ -38,4 +40,6 @@ export const migrations: Migration[] = [
   caseInsensitiveTagNameUniqConstraintMigration,
   documentsDateMigration,
   customPropertiesMigration,
+  documentsNotesMigration,
+  documentsNotesNullableMigration,
 ];
