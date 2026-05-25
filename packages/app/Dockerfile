@@ -60,4 +60,6 @@ ENV BETTER_AUTH_TELEMETRY=0
 RUN mkdir -p ./app-data/db ./app-data/documents ./ingestion && chown -R 1000:1000 /app
 USER 1000:1000
 
+ENV CI=true
+
 CMD ["pnpm", "start:with-migrations"]
